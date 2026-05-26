@@ -1,12 +1,54 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
+  // App name — change this when cloning the boilerplate
   "name": "rahul-boilerplate",
   "compatibility_date": "2026-05-26",
   "compatibility_flags": ["nodejs_compat"],
-  "pages_build_output_dir": "./build/client",
+
+  // Main entry point for the Cloudflare Worker (React Router SSR)
+  "main": "./build/server/index.js",
+  "assets": {
+    "directory": "./build/client",
+    "binding": "ASSETS"
+  },
+
+  // Workers Logs & observability (free tier, no config needed)
   "observability": {
     "enabled": true
   },
+
+  // ─── Bindings ────────────────────────────────────────────────────────────────
+  // These are available as ctx.env.* inside Cloudflare Workers at runtime.
+  // Secrets (TURSO_*, BETTER_AUTH_*, RESEND_*, R2_*) must be set via:
+  //   wrangler secret put SECRET_NAME
+  // or via the Cloudflare dashboard → Workers & Pages → Settings → Variables.
+
+  // Workers AI — powers the AI chat module (no API key needed, billing per request)
+  "ai": {
+    "binding": "AI"
+  },
+
+  // R2 Object Storage — powers the file uploads module
+  // Create your bucket first: wrangler r2 bucket create <bucket-name>
+  // Then set the bucket_name below and add R2_* secrets for local dev.
+  "r2_buckets": [
+    {
+      "binding": "R2_BUCKET",
+      "bucket_name": "boilerplate-uploads",
+      "preview_bucket_name": "boilerplate-uploads-preview"
+    }
+  ],
+
+  // Cron Triggers — powers the background job module (app/server/cron.ts)
+  // Wrangler will call the `scheduled` export on these schedules.
+  "triggers": {
+    "crons": [
+      "0 0 * * *",   // Daily at midnight UTC — main cleanup job
+      "0 * * * *"    // Hourly — lightweight health/metrics tick
+    ]
+  },
+
+  // ─── Non-secret vars (safe to commit) ────────────────────────────────────────
   "vars": {
     "NODE_VERSION": "22"
   }
