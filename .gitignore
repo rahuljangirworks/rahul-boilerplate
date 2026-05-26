@@ -17,3 +17,9 @@
 .github/
 .hermes.md
 PROJECT-STATE.md
+
+# Database / SQLite files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
