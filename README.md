@@ -156,7 +156,6 @@ docker run -p 3000:3000 --env-file .env boilerplate
 | `npm run dev` | Start local dev server with HMR |
 | `npm run build` | Production build |
 | `npm run typecheck` | Run `react-router typegen` + `tsc` |
-| `npm run typecheck:registry` | Type-check registry templates (isolated) |
 | `npm run start` | Serve the production build locally |
 
 ## License
