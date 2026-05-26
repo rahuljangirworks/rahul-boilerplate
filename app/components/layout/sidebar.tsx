@@ -1,5 +1,5 @@
 import { Link, NavLink, useFetcher } from "react-router";
-import { LayoutDashboard, FolderKanban, Settings, LogOut, PanelLeftClose, PanelLeft, Zap } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Settings, LogOut, PanelLeftClose, PanelLeft, Zap, MessageSquare, UploadCloud, Mail, CreditCard } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
@@ -17,6 +17,10 @@ import { cn } from "~/lib/utils";
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/dashboard/projects", label: "Projects", icon: FolderKanban },
+  { to: "/dashboard/chat", label: "AI Chat", icon: MessageSquare },
+  { to: "/dashboard/uploads", label: "R2 Uploads", icon: UploadCloud },
+  { to: "/dashboard/emails", label: "Emails", icon: Mail },
+  { to: "/dashboard/billing", label: "Billing", icon: CreditCard },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

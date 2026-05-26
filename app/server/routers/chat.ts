@@ -4,6 +4,13 @@ import { createTRPCRouter, protectedProcedure } from "~/server/trpc";
 import { projects } from "~/../drizzle/schema";
 
 export const chatRouter = createTRPCRouter({
+  isConfigured: protectedProcedure
+    .query(async () => {
+      const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+      const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+      return !!(accountId && apiToken);
+    }),
+
   stream: protectedProcedure
     .input(z.object({
       messages: z.array(z.object({

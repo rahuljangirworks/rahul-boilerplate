@@ -18,10 +18,18 @@ export default [
   // tRPC API handler
   route("api/trpc", "routes/api/trpc.ts"),
 
+  // Billing webhooks
+  route("api/webhooks/billing", "routes/api/webhooks.billing.ts"),
+
   // Dashboard (protected by auth middleware)
   layout("components/layout/app-shell.tsx", [
     route("dashboard", "routes/dashboard.tsx"),
     route("dashboard/projects", "routes/dashboard/projects.tsx"),
     route("dashboard/projects/:id", "routes/dashboard/projects.$id.tsx"),
+    route("dashboard/settings", "routes/dashboard/settings.tsx"),
+    route("dashboard/chat", "routes/dashboard/chat.tsx"),
+    route("dashboard/uploads", "routes/dashboard/uploads.tsx"),
+    route("dashboard/emails", "routes/dashboard/emails.tsx"),
+    route("dashboard/billing", "routes/dashboard/billing.tsx"),
   ]),
 ] satisfies RouteConfig;

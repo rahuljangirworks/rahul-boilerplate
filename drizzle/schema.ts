@@ -6,6 +6,9 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
   image: text("image"),
+  subscriptionTier: text("subscription_tier").default("Starter").notNull(),
+  subscriptionId: text("subscription_id"),
+  customerId: text("customer_id"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
