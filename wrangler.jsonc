@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rahul-boilerplate",
+  "compatibility_date": "2026-05-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": "./build/client",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "NODE_VERSION": "22"
+  }
+}

@@ -1,7 +1,19 @@
 .DS_Store
 .env
+.env.local
+.env.*.local
+.env.*
+!.env.example
 /node_modules/
-
-# React Router
-/.react-router/
 /build/
+/.react-router/
+/.wrangler/
+/.vercel/
+/.cache/
+/dist/
+*.log
+.agent
+.cursorrules
+.github/
+.hermes.md
+PROJECT-STATE.md
