@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router";
-import { authClient } from "~/lib/auth-client";
 import { useOptionalAuthUser } from "~/hooks/use-auth-user";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
@@ -19,18 +18,10 @@ export function UserNav() {
   const user = useOptionalAuthUser();
   const navigate = useNavigate();
 
-  const handleSignOut = useCallback(async () => {
-    try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            navigate("/");
-          },
-        },
-      });
-    } catch (error) {
-      console.error("Error signing out user:", error);
-    }
+  const handleSignOut = useCallback(() => {
+    document.cookie =
+      "boilerplate_demo_session=; Path=/; Max-Age=0; SameSite=Lax";
+    navigate("/");
   }, [navigate]);
 
   if (!user) {
@@ -75,9 +66,9 @@ export function UserNav() {
             <FolderKanban className="mr-2 h-4 w-4" />
             <span>Dashboard</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/dashboard/projects")}>
-            <FolderKanban className="mr-2 h-4 w-4" />
-            <span>Projects</span>
+          <DropdownMenuItem onClick={() => navigate("/dashboard/settings")}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

@@ -8,6 +8,8 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   return {
     db,
     userId: session?.user?.id ?? null,
+    user: session?.user ?? null,
+    session: session?.session ?? null,
     headers: opts.headers,
   };
 };
@@ -29,3 +31,14 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   }
   return next({ ctx: { ...ctx, userId: ctx.userId } });
 });
+
+export const requirePermissionProcedure = (permission: string) =>
+  t.procedure.use(({ ctx, next }) => {
+    if (!ctx.userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    if (!ctx.user?.permissions?.includes(permission)) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    return next({ ctx: { ...ctx, userId: ctx.userId } });
+  });

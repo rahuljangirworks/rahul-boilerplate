@@ -1,10 +1,10 @@
 import { unstable_useRoute as useRoute } from "react-router";
-import type { BetterAuthUser, BetterAuthSession } from "~/middlewares/auth";
+import type { AuthUser, AuthSession } from "~/lib/auth.server";
 
 export interface RootLoaderData {
   colorScheme: string;
-  user: BetterAuthUser | null;
-  session: BetterAuthSession["session"] | null;
+  user: AuthUser | null;
+  session: AuthSession["session"] | null;
 }
 
 export function useAuthUser() {
@@ -13,7 +13,7 @@ export function useAuthUser() {
 
   if (!loaderData?.user) {
     throw new Error(
-      "Authentication user not available. Ensure this hook is used within authenticated context.",
+      "Authentication user not available. Ensure this hook is used within authenticated context."
     );
   }
 

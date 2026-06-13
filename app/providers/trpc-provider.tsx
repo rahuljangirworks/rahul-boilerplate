@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import superjson from "superjson";
 import type { AppRouter } from "~/server/router";
 
-export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
+export const { TRPCProvider, useTRPC } = createTRPCContext<any>();
 
 export function TRPCProviderWrapper({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -21,7 +21,7 @@ export function TRPCProviderWrapper({ children }: { children: ReactNode }) {
   );
 
   const [trpcClient] = useState(() =>
-    createTRPCClient<AppRouter>({
+    createTRPCClient<any>({
       links: [
         splitLink({
           condition: (op) => op.path.includes("chat.stream"),

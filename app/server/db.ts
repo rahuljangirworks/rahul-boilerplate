@@ -4,7 +4,7 @@ import { env } from "~/lib/env";
 import * as schema from "~/../drizzle/schema";
 
 const client = createClient({
-  url: env.TURSO_DATABASE_URL,
+  url: env.TURSO_DATABASE_URL!,
   authToken: env.TURSO_AUTH_TOKEN,
 });
 

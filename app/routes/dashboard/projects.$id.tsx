@@ -1,15 +1,63 @@
 import { useParams, Link } from "react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useTRPC } from "~/providers/trpc-provider";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { ArrowLeft, Loader2, Calendar, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import type { Route } from "./+types/projects.$id";
 
-export function meta({ params }: Route.MetaArgs) {
+export function meta({}: Route.MetaArgs) {
   return [{ title: `Project Detail — Boilerplate` }];
 }
+
+const mockProjects: Record<string, {
+  id: string;
+  name: string;
+  description: string | null;
+  status: "active" | "paused" | "done";
+  createdAt: string;
+  updatedAt: string;
+}> = {
+  proj_1: {
+    id: "proj_1",
+    name: "Website Redesign",
+    description: "Complete overhaul of the company website with new branding",
+    status: "active",
+    createdAt: "2025-06-01T00:00:00Z",
+    updatedAt: "2025-06-10T00:00:00Z",
+  },
+  proj_2: {
+    id: "proj_2",
+    name: "Mobile App v2",
+    description: "React Native mobile application for iOS and Android",
+    status: "active",
+    createdAt: "2025-05-15T00:00:00Z",
+    updatedAt: "2025-06-08T00:00:00Z",
+  },
+  proj_3: {
+    id: "proj_3",
+    name: "API Migration",
+    description: "Migrate REST API to tRPC for better type safety",
+    status: "paused",
+    createdAt: "2025-04-20T00:00:00Z",
+    updatedAt: "2025-05-30T00:00:00Z",
+  },
+  proj_4: {
+    id: "proj_4",
+    name: "Design System",
+    description: "Build a shared component library with Tailwind and Radix",
+    status: "done",
+    createdAt: "2025-03-01T00:00:00Z",
+    updatedAt: "2025-04-15T00:00:00Z",
+  },
+  proj_5: {
+    id: "proj_5",
+    name: "Analytics Dashboard",
+    description: "Real-time analytics dashboard with charts and metrics",
+    status: "active",
+    createdAt: "2025-06-05T00:00:00Z",
+    updatedAt: "2025-06-12T00:00:00Z",
+  },
+};
 
 const statusBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
   active: "default",
@@ -19,12 +67,7 @@ const statusBadgeVariant: Record<string, "default" | "secondary" | "outline"> = 
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
-  const trpc = useTRPC();
-
-  const { data: project, isLoading, error } = useQuery({
-    ...trpc.project.getById.queryOptions({ id: id ?? "" }),
-    enabled: !!id,
-  });
+  const project = id ? mockProjects[id] : null;
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -37,31 +80,12 @@ export default function ProjectDetail() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Project Details</h1>
           <p className="text-muted-foreground text-sm">
-            Detailed information of the selected generic boilerplate record.
+            Detailed information of the selected project.
           </p>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : error || !project ? (
-        <Card className="border-destructive/50 bg-destructive/5 text-destructive-foreground">
-          <CardHeader className="flex flex-row items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <CardTitle>Error Loading Project</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">
-              {error?.message || "The requested project could not be found or you do not have permission to view it."}
-            </p>
-            <Button variant="outline" className="mt-4" asChild>
-              <Link to="/dashboard/projects">Return to Projects</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
+      {project ? (
         <Card>
           <CardHeader className="flex flex-row items-start justify-between">
             <div className="space-y-1.5">
@@ -78,7 +102,7 @@ export default function ProjectDetail() {
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-muted-foreground">Description</h4>
               <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                {project.description || "No description provided for this template project."}
+                {project.description || "No description provided."}
               </p>
             </div>
 
@@ -92,6 +116,20 @@ export default function ProjectDetail() {
                 <span>Last Updated: {new Date(project.updatedAt).toLocaleString()}</span>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardHeader>
+            <CardTitle>Project Not Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              The requested project could not be found.
+            </p>
+            <Button variant="outline" className="mt-4" asChild>
+              <Link to="/dashboard/projects">Return to Projects</Link>
+            </Button>
           </CardContent>
         </Card>
       )}

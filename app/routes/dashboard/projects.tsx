@@ -1,22 +1,12 @@
-import { useState, useCallback, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "~/providers/trpc-provider";
-import { useFilters } from "~/stores/use-filters";
+import { useState, useMemo } from "react";
+import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { DataTable } from "~/components/projects/data-table";
-import { ProjectDialog } from "~/components/projects/project-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Plus, Search, Edit2, Trash2, FolderKanban, Loader2 } from "lucide-react";
+import { Plus, Search, FolderKanban } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { toast } from "sonner";
+
 import type { Route } from "./+types/projects";
 
 export function meta({}: Route.MetaArgs) {
@@ -32,6 +22,49 @@ interface Project {
   updatedAt: string;
 }
 
+const mockProjects: Project[] = [
+  {
+    id: "proj_1",
+    name: "Website Redesign",
+    description: "Complete overhaul of the company website with new branding",
+    status: "active",
+    createdAt: "2025-06-01T00:00:00Z",
+    updatedAt: "2025-06-10T00:00:00Z",
+  },
+  {
+    id: "proj_2",
+    name: "Mobile App v2",
+    description: "React Native mobile application for iOS and Android",
+    status: "active",
+    createdAt: "2025-05-15T00:00:00Z",
+    updatedAt: "2025-06-08T00:00:00Z",
+  },
+  {
+    id: "proj_3",
+    name: "API Migration",
+    description: "Migrate REST API to tRPC for better type safety",
+    status: "paused",
+    createdAt: "2025-04-20T00:00:00Z",
+    updatedAt: "2025-05-30T00:00:00Z",
+  },
+  {
+    id: "proj_4",
+    name: "Design System",
+    description: "Build a shared component library with Tailwind and Radix",
+    status: "done",
+    createdAt: "2025-03-01T00:00:00Z",
+    updatedAt: "2025-04-15T00:00:00Z",
+  },
+  {
+    id: "proj_5",
+    name: "Analytics Dashboard",
+    description: "Real-time analytics dashboard with charts and metrics",
+    status: "active",
+    createdAt: "2025-06-05T00:00:00Z",
+    updatedAt: "2025-06-12T00:00:00Z",
+  },
+];
+
 const statusOptions = [
   { value: "all", label: "All Status" },
   { value: "active", label: "Active" },
@@ -46,55 +79,29 @@ const statusBadgeVariant: Record<string, "default" | "secondary" | "outline"> = 
 };
 
 export default function ProjectsPage() {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  
-  const { statusFilter, searchQuery, setStatusFilter, setSearchQuery } = useFilters();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  // Modals state
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const filteredProjects = useMemo(() => {
+    let result = mockProjects;
+    if (statusFilter !== "all") {
+      result = result.filter((p) => p.status === statusFilter);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [statusFilter, searchQuery]);
 
-  // Fetch paginated projects
-  const { data, isLoading } = useQuery(
-    trpc.project.list.queryOptions({
-      status: statusFilter,
-      search: searchQuery || undefined,
-      page,
-      pageSize,
-    })
-  );
-
-  const deleteMutation = useMutation({
-    ...trpc.project.delete.mutationOptions(),
-    onSuccess: () => {
-      toast.success("Project deleted successfully.");
-      queryClient.invalidateQueries({ queryKey: trpc.project.pathKey() });
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to delete project");
-    },
-  });
-
-  const handleEditClick = useCallback((project: Project) => {
-    setSelectedProject(project);
-    setDialogOpen(true);
-  }, []);
-
-  const handleDeleteClick = useCallback(
-    (id: string) => {
-      if (confirm("Are you sure you want to delete this project? This action is irreversible.")) {
-        deleteMutation.mutate({ id });
-      }
-    },
-    [deleteMutation]
-  );
-
-  // TanStack columns
-  const columns = useMemo<ColumnDef<Project>[]>(() => {
-    return [
+  const columns = useMemo<ColumnDef<Project>[]>(
+    () => [
       {
         accessorKey: "name",
         header: "Name",
@@ -131,66 +138,14 @@ export default function ProjectsPage() {
           </span>
         ),
       },
-      {
-        id: "actions",
-        header: () => <span className="sr-only">Actions</span>,
-        cell: ({ row }) => {
-          const isDeleting = deleteMutation.isPending && deleteMutation.variables?.id === row.original.id;
-          return (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 hover:bg-muted"
-                onClick={() => handleEditClick(row.original)}
-              >
-                <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                onClick={() => handleDeleteClick(row.original.id)}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            </div>
-          );
-        },
-      },
-    ];
-  }, [handleEditClick, handleDeleteClick, deleteMutation]);
+    ],
+    []
+  );
 
-  const pageCount = data ? Math.ceil(data.total / data.pageSize) : 1;
-
-  const handleCreateNewClick = useCallback(() => {
-    setSelectedProject(null);
-    setDialogOpen(true);
-  }, []);
-
-  const emptyState = (
-    <div className="flex flex-col items-center justify-center p-8 space-y-4">
-      <div className="rounded-full bg-muted p-3">
-        <FolderKanban className="h-6 w-6 text-muted-foreground" />
-      </div>
-      <div className="text-center space-y-1">
-        <p className="font-semibold">No projects found</p>
-        <p className="text-sm text-muted-foreground">
-          {searchQuery ? "Try checking spelling or adjusting search filters." : "Create your first boilerplate project container to get started."}
-        </p>
-      </div>
-      {!searchQuery && (
-        <Button size="sm" onClick={handleCreateNewClick}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Project
-        </Button>
-      )}
-    </div>
+  const pageCount = Math.ceil(filteredProjects.length / pageSize);
+  const paginatedProjects = filteredProjects.slice(
+    (page - 1) * pageSize,
+    page * pageSize
   );
 
   return (
@@ -199,10 +154,10 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
           <p className="text-muted-foreground text-sm">
-            Clean CRUD boilerplate template utilizing drizzle migrations.
+            Manage your projects and track their progress.
           </p>
         </div>
-        <Button onClick={handleCreateNewClick}>
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           New Project
         </Button>
@@ -221,41 +176,45 @@ export default function ProjectsPage() {
             }}
           />
         </div>
-        <Select
-          value={statusFilter}
-          onValueChange={(val) => {
-            setStatusFilter(val as typeof statusFilter);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Select Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map(({ value, label }) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          {statusOptions.map(({ value, label }) => (
+            <Button
+              key={value}
+              variant={statusFilter === value ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <DataTable
         columns={columns}
-        data={(data?.data as Project[]) ?? []}
-        isLoading={isLoading}
+        data={paginatedProjects}
         pageCount={pageCount}
         pageIndex={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        emptyState={emptyState}
-      />
-
-      <ProjectDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        project={selectedProject}
+        emptyState={
+          <div className="flex flex-col items-center justify-center p-8 space-y-4">
+            <div className="rounded-full bg-muted p-3">
+              <FolderKanban className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="font-semibold">No projects found</p>
+              <p className="text-sm text-muted-foreground">
+                {searchQuery
+                  ? "Try checking spelling or adjusting search filters."
+                  : "Create your first project to get started."}
+              </p>
+            </div>
+          </div>
+        }
       />
     </div>
   );

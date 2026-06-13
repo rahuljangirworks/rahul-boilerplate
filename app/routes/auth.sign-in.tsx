@@ -45,17 +45,24 @@ export default function SignInPage() {
       } else {
         navigate(decodeURIComponent(redirectTo));
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleOAuthSignIn = async (provider: "github" | "google" | "slack") => {
+    try {
+      await authClient.signIn.social({ provider });
+    } catch {
+      setError(`OAuth sign-in with ${provider} is not configured.`);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 bg-muted/30">
       <div className="w-full max-w-sm space-y-6">
-        {/* Logo */}
         <div className="flex flex-col items-center gap-2">
           <Link
             to="/"
@@ -73,7 +80,42 @@ export default function SignInPage() {
               Enter your email and password to access your account.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOAuthSignIn("github")}
+              >
+                GitHub
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOAuthSignIn("google")}
+              >
+                Google
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOAuthSignIn("slack")}
+              >
+                Slack
+              </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -88,7 +130,15 @@ export default function SignInPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    to="/auth/forgot-password"
+                    className="text-xs text-primary underline-offset-4 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"

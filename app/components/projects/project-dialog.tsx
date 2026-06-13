@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "~/providers/trpc-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
@@ -33,24 +31,23 @@ interface Project {
 interface ProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  project?: Project | null; // If provided, we are in edit mode
+  project?: Project | null;
+  onSave?: (data: { name: string; description?: string; status: string }) => void;
 }
 
 export function ProjectDialog({
   open,
   onOpenChange,
   project = null,
+  onSave,
 }: ProjectDialogProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"active" | "paused" | "done">("active");
+  const [isPending, setIsPending] = useState(false);
 
   const isEditMode = !!project;
 
-  // Pre-fill form if editing
   useEffect(() => {
     if (project) {
       setName(project.name);
@@ -63,32 +60,8 @@ export function ProjectDialog({
     }
   }, [project, open]);
 
-  const createMutation = useMutation({
-    ...trpc.project.create.mutationOptions(),
-    onSuccess: () => {
-      toast.success("Project created successfully!");
-      queryClient.invalidateQueries({ queryKey: trpc.project.pathKey() });
-      onOpenChange(false);
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to create project");
-    },
-  });
-
-  const updateMutation = useMutation({
-    ...trpc.project.update.mutationOptions(),
-    onSuccess: () => {
-      toast.success("Project updated successfully!");
-      queryClient.invalidateQueries({ queryKey: trpc.project.pathKey() });
-      onOpenChange(false);
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update project");
-    },
-  });
-
   const handleSubmit = useCallback(
-    (e: FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault();
 
       if (!name.trim()) {
@@ -96,25 +69,16 @@ export function ProjectDialog({
         return;
       }
 
-      if (isEditMode && project) {
-        updateMutation.mutate({
-          id: project.id,
-          name,
-          description: description || undefined,
-          status,
-        });
-      } else {
-        createMutation.mutate({
-          name,
-          description: description || undefined,
-          status,
-        });
-      }
+      setIsPending(true);
+      // Simulate save delay
+      await new Promise((r) => setTimeout(r, 500));
+      onSave?.({ name, description, status });
+      toast.success(isEditMode ? "Project updated!" : "Project created!");
+      setIsPending(false);
+      onOpenChange(false);
     },
-    [name, description, status, isEditMode, project, createMutation, updateMutation]
+    [name, description, status, isEditMode, onSave, onOpenChange]
   );
-
-  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -125,7 +89,7 @@ export function ProjectDialog({
             <DialogDescription>
               {isEditMode
                 ? "Modify your project's settings and properties."
-                : "Add a new generic project container to your boilerplate."}
+                : "Add a new project to your workspace."}
             </DialogDescription>
           </DialogHeader>
 
@@ -134,7 +98,7 @@ export function ProjectDialog({
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                placeholder="My Boilerplate App"
+                placeholder="My Project"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isPending}
@@ -145,7 +109,7 @@ export function ProjectDialog({
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="A reusable Next-Gen Full-Stack scaffolding."
+                placeholder="A brief description of your project."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={isPending}

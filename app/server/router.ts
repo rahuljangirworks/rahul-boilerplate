@@ -4,6 +4,7 @@ import { projectRouter } from "~/server/routers/project";
 import { chatRouter } from "~/server/routers/chat";
 import { uploadRouter } from "~/server/routers/upload";
 import { emailRouter } from "~/server/routers/email";
+import { rbacRouter } from "~/server/routers/rbac";
 
 export const appRouter = createTRPCRouter({
   user: userRouter,
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   chat: chatRouter,
   upload: uploadRouter,
   email: emailRouter,
+  rbac: rbacRouter,
 });
 
 export type AppRouter = typeof appRouter;
